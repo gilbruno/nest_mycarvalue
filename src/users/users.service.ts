@@ -24,6 +24,11 @@ export class UsersService {
     }
 
     findOne(id: number) {
+        //The 'findOne' method returns the first element of the DB set if id is null 
+        //so we must return null in that case
+        if (!id) {
+            return null
+        }
         return this.repo.findOne({
             where: {id: id}
         });

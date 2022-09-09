@@ -1,7 +1,7 @@
 import { 
     Body, Controller, Post, Get, 
     Delete,  Patch, Param, Query, 
-    NotFoundException
+    NotFoundException, Session
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -17,15 +17,44 @@ export class UsersController {
     constructor(private usersService: UsersService, private authService: AuthService) {
     }
 
+    /**
+     * Functions to test cookie creation
+     * @param color 
+     * @param session 
+     */
+    @Get('/colors/:color')
+    setColor(@Param('color') color: string, @Session() session: any) {
+        session.color = color
+    }
+
+    @Get('/colors')
+    getColor(@Session() session: any) {
+        return session.color
+    }
+
+    @Get('/whoami')
+    whoAmI(@Session() session: any) {
+        return this.usersService.findOne(session.userId)
+    }
+
+    @Post('signout')
+    signOut(@Session() session: any) {
+        session.userId = null
+    }
+
     @Post('signup')
-    createUser(@Body() body: CreateUserDto) {
+    async createUser(@Body() body: CreateUserDto, @Session() session: any) {
         console.log(body)
-        this.authService.signup(body.email, body.password)
+        const user = await this.authService.signup(body.email, body.password)
+        session.userId = user.id
+        return user
     }    
 
     @Post('signin')
-    signin(@Body() body: CreateUserDto) {
-        this.authService.signin(body.email, body.password)
+    async signin(@Body() body: CreateUserDto, @Session() session: any) {
+        const user = await this.authService.signin(body.email, body.password)
+        session.userId = user.id
+        return user
     }    
 
     @Get('/:id')
